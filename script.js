@@ -7,7 +7,43 @@
 
 // TODO: Select all navigation links
 // Hint: Use querySelectorAll with the class '.nav-link'
-const navLinks = null; // Replace null with your selector
+const navLinks = document.querySelectorAll('.nav-link');
+navLinks.forEach(link => {
+    link.addEventListener('click', (e) => {
+        e.preventDefault(); // Prevent default jump
+
+        // Get the target section ID from href
+        const targetId = link.getAttribute('href');
+        const targetSection = document.querySelector(targetId);
+
+        // Smooth scroll to target
+        targetSection.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+        });
+    });
+});
+window.addEventListener('scroll', () => {
+    const sections = document.querySelectorAll('section');
+    const scrollPos = window.scrollY + 100;
+
+    sections.forEach(section => {
+        const sectionTop = section.offsetTop;
+        const sectionHeight = section.offsetHeight;
+        const sectionId = section.getAttribute('id');
+
+        if (scrollPos >= sectionTop && scrollPos < sectionTop + sectionHeight) {
+            // Remove active from all links
+            navLinks.forEach(link => link.classList.remove('active'));
+
+            // Add active to current section's link
+            const activeLink = document.querySelector(`.nav-link[href="#${sectionId}"]`);
+            if (activeLink) {
+                activeLink.classList.add('active');
+            }
+        }
+    });
+});
 
 // TODO: Add click event listeners to each nav link
 // Hint: Use forEach to loop through navLinks
@@ -28,11 +64,8 @@ const navLinks = null; // Replace null with your selector
 
 // TODO: Select all filter buttons
 // Hint: Use querySelectorAll with the class '.filter-btn'
-const filterButtons = null; // Replace null with your selector
-
-// TODO: Select all project cards
-// Hint: Use querySelectorAll with the class '.project-card'
-const projectCards = null; // Replace null with your selector
+const filterButtons = document.querySelectorAll('.filter-btn');
+const projectCards = document.querySelectorAll('.project-card');
 
 // TODO: Add click event listeners to filter buttons
 // For each button:
@@ -44,27 +77,56 @@ const projectCards = null; // Replace null with your selector
 //      - If filter is 'all', show all cards
 //      - Otherwise, show only cards matching the filter
 //   6. Use style.display to show ('block') or hide ('none') cards
+function filterProjects(category) {
+    projectCards.forEach(card => {
+        const cardCategory = card.getAttribute('data-category');
 
+        if (category === 'all' || cardCategory === category) {
+            card.style.display = 'block'; // Show matching cards
+        } else {
+            card.style.display = 'none'; // Hide non-matching cards
+        }
+    });
+}
 // Hint: To get a data attribute, use element.dataset.filter or element.getAttribute('data-filter')
+filterButtons.forEach(button => {
+    button.addEventListener('click', () => {
+        // Remove active class from all buttons
+        filterButtons.forEach(btn => btn.classList.remove('active'));
 
+        // Add active class to clicked button
+        button.classList.add('active');
 
+        // Get filter value and filter projects
+        const filterValue = button.getAttribute('data-filter');
+        filterProjects(filterValue);
+    });
+});
 // ============================================
 // PART 3: MOBILE MENU TOGGLE (10 min)
 // ============================================
 
 // TODO: Select the mobile menu toggle button
 // Hint: Use querySelector with the class '.nav-toggle'
-const navToggle = null; // Replace null with your selector
-
-// TODO: Select the navigation menu
-// Hint: Use querySelector with the class '.nav-menu'
-const navMenu = null; // Replace null with your selector
+const navToggle = document.querySelector('.nav-toggle');
+const navMenu = document.querySelector('.nav-menu');
 
 // TODO: Add click event listener to toggle button
 // When clicked:
 //   1. Toggle 'active' class on navMenu
 //   2. Toggle 'active' class on navToggle (for hamburger animation)
+navToggle.addEventListener('click', () => {
+    navMenu.classList.toggle('active');
+    navToggle.classList.toggle('active');
+});
 
+// Close menu when nav link is clicked
+navLinks.forEach(link => {
+    link.addEventListener('click', () => {
+        navMenu.classList.remove('active');
+        navToggle.classList.remove('active');
+    });
+});
 // BONUS: Close menu when a nav link is clicked
 // TODO: Add click listeners to nav links to close the mobile menu
 
@@ -75,8 +137,7 @@ const navMenu = null; // Replace null with your selector
 
 // TODO: Select all skill progress bars
 // Hint: Use querySelectorAll with the class '.skill-progress'
-const skillBars = null; // Replace null with your selector
-
+const skillBars = document.querySelectorAll('.skill-progress');
 // TODO: Create a function to animate skills when they come into view
 // Hint: Add a scroll event listener
 // When skills section is visible:
@@ -85,46 +146,72 @@ const skillBars = null; // Replace null with your selector
 //   3. Add a CSS transition for smooth animation
 
 // Advanced: Use Intersection Observer for better performance (optional)
+function animateSkills() {
+    const skillsSection = document.querySelector('#skills');
+    const skillsPosition = skillsSection.getBoundingClientRect().top;
+    const screenPosition = window.innerHeight;
 
+    if (skillsPosition < screenPosition) {
+        skillBars.forEach(bar => {
+            const skillLevel = bar.style.getPropertyValue('--skill-level');
+            bar.style.width = skillLevel;
+        });
+    }
+}
+window.addEventListener('scroll', animateSkills);
 
+// Run once on load in case skills are already visible
+animateSkills();
 // ============================================
 // PART 5: FORM VALIDATION (20 min)
 // ============================================
 
 // TODO: Select the contact form
 // Hint: Use querySelector with the id '#contact-form'
-const contactForm = null; // Replace null with your selector
-
-// TODO: Select form inputs
-const nameInput = null; // querySelector for #name
-const emailInput = null; // querySelector for #email
-const messageInput = null; // querySelector for #message
-
+const contactForm = document.querySelector('#contact-form');
+const nameInput = document.querySelector('#name');
+const emailInput = document.querySelector('#email');
+const messageInput = document.querySelector('#message');
 // TODO: Create validation functions
 
 // Function to validate email format
 function isValidEmail(email) {
-    // Hint: Use a simple regex or check for @ and .
-    // Example: return email.includes('@') && email.includes('.');
-    return false; // Replace with actual validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
 }
 
-// Function to show error message
+// Show error message
 function showError(input, message) {
-    // TODO:
-    // 1. Create a span element for error message
-    // 2. Set its textContent to the message
-    // 3. Add a class 'error-message' for styling
-    // 4. Append it after the input field
-    // Hint: Use createElement, classList.add, and appendChild
+    // Remove any existing error
+    clearError(input);
+
+    // Create error element
+    const error = document.createElement('span');
+    error.className = 'error-message';
+    error.textContent = message;
+
+    // Add error class to input
+    input.classList.add('error');
+    input.classList.remove('success');
+
+    // Append error after input
+    input.parentElement.appendChild(error);
 }
 
-// Function to clear error message
+// Clear error message
 function clearError(input) {
-    // TODO:
-    // 1. Find the error message element (next sibling)
-    // 2. Remove it from the DOM
-    // Hint: Use querySelector or nextElementSibling and remove()
+    const error = input.parentElement.querySelector('.error-message');
+    if (error) {
+        error.remove();
+    }
+    input.classList.remove('error');
+}
+
+// Show success state
+function showSuccess(input) {
+    clearError(input);
+    input.classList.add('success');
+    input.classList.remove('error');
 }
 
 // TODO: Add 'input' event listeners for real-time validation
@@ -150,8 +237,72 @@ function clearError(input) {
 //   4. If invalid:
 //      - Show error messages
 //      - Don't submit
+nameInput.addEventListener('input', () => {
+    if (nameInput.value.trim().length < 2) {
+        showError(nameInput, 'Name must be at least 2 characters');
+    } else {
+        showSuccess(nameInput);
+    }
+});
 
+// Validate email input
+emailInput.addEventListener('input', () => {
+    if (!isValidEmail(emailInput.value)) {
+        showError(emailInput, 'Please enter a valid email address');
+    } else {
+        showSuccess(emailInput);
+    }
+});
 
+// Validate message input
+messageInput.addEventListener('input', () => {
+    if (messageInput.value.trim().length < 10) {
+        showError(messageInput, 'Message must be at least 10 characters');
+    } else {
+        showSuccess(messageInput);
+    }
+});
+contactForm.addEventListener('submit', (e) => {
+    e.preventDefault(); // Prevent actual submission
+
+    // Validate all fields
+    let isValid = true;
+
+    if (nameInput.value.trim().length < 2) {
+        showError(nameInput, 'Name must be at least 2 characters');
+        isValid = false;
+    }
+
+    if (!isValidEmail(emailInput.value)) {
+        showError(emailInput, 'Please enter a valid email address');
+        isValid = false;
+    }
+
+    if (messageInput.value.trim().length < 10) {
+        showError(messageInput, 'Message must be at least 10 characters');
+        isValid = false;
+    }
+
+    // If valid, show success
+    if (isValid) {
+        // Create success message
+        const successMsg = document.createElement('div');
+        successMsg.className = 'success-message';
+        successMsg.textContent = 'Thank you! Your message has been sent successfully.';
+
+        // Append after form
+        contactForm.appendChild(successMsg);
+
+        // Clear form after 2 seconds
+        setTimeout(() => {
+            contactForm.reset();
+            successMsg.remove();
+            document.querySelectorAll('.success').forEach(input => {
+                input.classList.remove('success');
+            });
+        }, 3000);
+    }
+});
 // ============================================
 // EXTENSION ACTIVITIES (after Parts 1 to 5)
 // ============================================
